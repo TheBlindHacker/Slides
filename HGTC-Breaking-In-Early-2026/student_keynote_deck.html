@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Breaking In Early: Day in the Life & Building Your Tech Velocity</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: rgba(16, 24, 40, 0.75);
+      --card-border: rgba(56, 189, 248, 0.15);
+      --card-hover: rgba(56, 189, 248, 0.28);
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --cyan: #38bdf8;
+      --cyan-glow: rgba(56, 189, 248, 0.4);
+      --emerald: #34d399;
+      --emerald-glow: rgba(52, 211, 153, 0.3);
+      --amber: #fbbf24;
+      --rose: #fb7185;
+      --purple: #a855f7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background: radial-gradient(circle at 15% 20%, #0d1e38 0%, #060911 60%, #03050a 100%);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    /* Ambient background grid */
+    .bg-grid {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(to right, rgba(56, 189, 248, 0.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(56, 189, 248, 0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Deck Container */
+    #deck {
+      position: relative;
+      width: 92vw;
+      max-width: 1200px;
+      height: 82vh;
+      max-height: 760px;
+      background: rgba(10, 15, 29, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 40px rgba(56, 189, 248, 0.15);
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+      overflow: hidden;
+    }
+
+    /* Header Bar */
+    header {
+      padding: 16px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      background: rgba(8, 12, 22, 0.6);
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+    }
+
+    .badge-hub {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .badge-cyan {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--cyan);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+    }
+
+    .badge-emerald {
+      background: rgba(52, 211, 153, 0.15);
+      color: var(--emerald);
+      border: 1px solid rgba(52, 211, 153, 0.35);
+    }
+
+    .badge-pulse {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 10px var(--emerald);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.2); }
+    }
+
+    /* Slide Content Viewport */
+    .slides-wrapper {
+      position: relative;
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 40px 56px;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(18px) scale(0.985);
+      transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                  visibility 0.35s;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+
+    /* Typography inside slides */
+    h1.hero-title {
+      font-size: 3.2rem;
+      font-weight: 900;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #ffffff 30%, #38bdf8 75%, #818cf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    h2.slide-title {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    p.subtitle {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 28px;
+      max-width: 900px;
+    }
+
+    .pill-accent {
+      color: var(--cyan);
+      font-family: 'Fira Code', monospace;
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+      display: block;
+      font-weight: 600;
+    }
+
+    /* Grid layouts */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      width: 100%;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      width: 100%;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      width: 100%;
+    }
+
+    /* Card styling */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 24px;
+      transition: border-color 0.2s ease, transform 0.2s ease;
+      position: relative;
+    }
+
+    .card:hover {
+      border-color: var(--card-hover);
+      transform: translateY(-2px);
+    }
+
+    .card h3 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #ffffff;
+    }
+
+    .card p, .card li {
+      font-size: 0.94rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    .card ul {
+      list-style-type: none;
+      margin-top: 10px;
+    }
+
+    .card li {
+      margin-bottom: 8px;
+      position: relative;
+      padding-left: 20px;
+    }
+
+    .card li::before {
+      content: "▹";
+      position: absolute;
+      left: 0;
+      color: var(--cyan);
+      font-weight: bold;
+    }
+
+    .card .icon {
+      font-size: 1.3rem;
+    }
+
+    /* Timeline component */
+    .timeline-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 10px;
+      position: relative;
+    }
+
+    .timeline-step {
+      display: flex;
+      gap: 20px;
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid rgba(56, 189, 248, 0.15);
+      padding: 16px 20px;
+      border-radius: 12px;
+      align-items: center;
+    }
+
+    .timeline-step .time-tag {
+      font-family: 'Fira Code', monospace;
+      font-weight: 600;
+      color: var(--cyan);
+      font-size: 0.95rem;
+      min-width: 140px;
+      padding-right: 14px;
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .timeline-step .time-desc h4 {
+      color: #fff;
+      font-size: 1.05rem;
+      margin-bottom: 4px;
+    }
+
+    .timeline-step .time-desc p {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+
+    /* Comparison Table / Split */
+    .split-box {
+      border-radius: 12px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .split-passive {
+      background: rgba(239, 68, 68, 0.07);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+
+    .split-active {
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(52, 211, 153, 0.35);
+    }
+
+    .split-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .split-passive .split-title { color: #f87171; }
+    .split-active .split-title { color: #34d399; }
+
+    /* Callout banner */
+    .callout {
+      margin-top: 18px;
+      background: rgba(56, 189, 248, 0.08);
+      border-left: 4px solid var(--cyan);
+      padding: 14px 20px;
+      border-radius: 0 10px 10px 0;
+      font-size: 0.95rem;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    /* Code Block pill */
+    .code-pill {
+      font-family: 'Fira Code', monospace;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 2px 7px;
+      border-radius: 5px;
+      color: var(--cyan);
+      font-size: 0.88em;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    /* Footer Controls */
+    footer {
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid rgba(255, 255, 255, 0.07);
+      background: rgba(8, 12, 22, 0.7);
+      font-family: 'Fira Code', monospace;
+    }
+
+    .progress-bar-container {
+      flex: 1;
+      max-width: 320px;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 9999px;
+      overflow: hidden;
+      margin: 0 20px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--cyan), #818cf8);
+      transition: width 0.3s ease;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .btn:hover {
+      background: rgba(56, 189, 248, 0.2);
+      border-color: var(--cyan);
+      color: #fff;
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .slide-counter {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      min-width: 60px;
+      text-align: right;
+    }
+
+    .keyboard-hint {
+      color: #64748b;
+      font-size: 0.78rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      #deck {
+        width: 96vw;
+        height: 94vh;
+      }
+      .slide {
+        padding: 24px;
+      }
+      h1.hero-title { font-size: 2.2rem; }
+      h2.slide-title { font-size: 1.6rem; }
+      .grid-2, .grid-3, .grid-4 {
+        grid-template-columns: 1fr;
+      }
+      .timeline-step {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
+      .timeline-step .time-tag {
+        border-right: none;
+        padding-right: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+
+  <div id="deck">
+    <!-- Header -->
+    <header>
+      <div class="badge-hub">
+        <span class="badge badge-cyan">Conway Computer Club</span>
+        <span class="badge badge-emerald"><span class="badge-pulse"></span> Mentorship Series</span>
+      </div>
+      <div class="keyboard-hint">Use [←] / [→] keys or Space to navigate</div>
+    </header>
+
+    <!-- Slides Container -->
+    <div class="slides-wrapper">
+
+      <!-- SLIDE 1: Title -->
+      <div class="slide active" data-slide="1">
+        <span class="pill-accent">// KEYNOTE & WORKSHOP</span>
+        <h1 class="hero-title">Breaking In Early</h1>
+        <p class="subtitle">A Day in the Life, Offensive Security Reality, and How to Build Serious Career Velocity as a Student Before Graduation.</p>
+        
+        <div class="grid-3" style="margin-top: 15px;">
+          <div class="card">
+            <h3><span>⚡</span> The Real World</h3>
+            <p>What a day in tech & cybersecurity actually looks like beyond the textbook hype.</p>
+          </div>
+          <div class="card">
+            <h3><span>🎯</span> The Trap</h3>
+            <p>Why relying solely on GPA and passive degrees puts grads 2 years behind.</p>
+          </div>
+          <div class="card">
+            <h3><span>🚀</span> The Network Alpha</h3>
+            <p>How to join tech communities right now and turn curiosity into paid offers.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 2: Who Am I -->
+      <div class="slide" data-slide="2">
+        <span class="pill-accent">// SPEAKER INTRO</span>
+        <h2 class="slide-title">Who Am I & What Do I Do?</h2>
+        <p class="subtitle">Director of Offensive Security Research & Community Lead — bridging real-world cyber defense with local builder ecosystems.</p>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3><span>🛡️</span> Day Job: Offensive Security</h3>
+            <ul>
+              <li>Leading red teaming, threat emulation & AI vulnerability research.</li>
+              <li>Hunting architectural flaws, breaking cloud perimeters, and testing defense postures.</li>
+              <li>Mentoring analysts and building automated adversary tooling.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3><span>🤝</span> Community: Builders & Hackers</h3>
+            <ul>
+              <li>Founder / Lead: <strong>Conway Computer Club (CCC)</strong> & <strong>Hack Myrtle</strong>.</li>
+              <li>Creator of <strong>Mentor Village</strong>: getting real tech skills to the Grand Strand.</li>
+              <li>Advocate for early tech networking, homelabs, and hands-on grit.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="callout">
+          <strong>Core Philosophy:</strong> Don't learn to hack — <em>hack to learn</em>. Dive in, break it, fix it, and understand how the machinery actually works. That curiosity goes a remarkably long way.
+        </div>
+      </div>
+
+      <!-- SLIDE 3: Day in the Life (Morning to Noon) -->
+      <div class="slide" data-slide="3">
+        <span class="pill-accent">// THE REAL ROUTINE</span>
+        <h2 class="slide-title">A Day in the Life: Part 1</h2>
+        <p class="subtitle">How a Director of Security Research & Builder structures the daily sprint.</p>
+
+        <div class="timeline-container">
+          <div class="timeline-step">
+            <div class="time-tag">08:00 - 09:30</div>
+            <div class="time-desc">
+              <h4>Intelligence Triage & Threat Landscape</h4>
+              <p>Reviewing emerging CVEs, new 0-days, dark web breach chatter, and threat intel feeds. Knowing what changed overnight.</p>
+            </div>
+          </div>
+          <div class="timeline-step">
+            <div class="time-tag">09:30 - 11:30</div>
+            <div class="time-desc">
+              <h4>Deep Technical Execution & Lab Testing</h4>
+              <p>Reverse engineering malware, building threat emulation scripts, testing attack chains against containerized infrastructure.</p>
+            </div>
+          </div>
+          <div class="timeline-step">
+            <div class="time-tag">11:30 - 12:30</div>
+            <div class="time-desc">
+              <h4>Architectural Alignment & Red/Blue Sync</h4>
+              <p>Syncing with engineering teams. It's not just "you're vulnerable"—it's explaining <em>how</em> to fix it without breaking production.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 4: Day in the Life (Afternoon to Evening) -->
+      <div class="slide" data-slide="4">
+        <span class="pill-accent">// THE REAL ROUTINE</span>
+        <h2 class="slide-title">A Day in the Life: Part 2</h2>
+        <p class="subtitle">Balancing technical research with community leadership and side-project engineering.</p>
+
+        <div class="timeline-container">
+          <div class="timeline-step">
+            <div class="time-tag">13:30 - 15:30</div>
+            <div class="time-desc">
+              <h4>Adversary Emulation & Autonomous Agent Prototyping</h4>
+              <p>Writing automation (Python, Go, MCP agents) to automate scanning, security verification, and distributed worker nodes.</p>
+            </div>
+          </div>
+          <div class="timeline-step">
+            <div class="time-tag">15:30 - 17:00</div>
+            <div class="time-desc">
+              <h4>Executive Debriefs & Threat Briefings</h4>
+              <p>Translating hardcore exploit mechanics into business risk decisions for leadership. Clear writing is a superpower.</p>
+            </div>
+          </div>
+          <div class="timeline-step">
+            <div class="time-tag">18:00 - 20:00+</div>
+            <div class="time-desc">
+              <h4>Homelab, Conway Computer Club & Open Source</h4>
+              <p>Proxmox clustering, running workshops, mentoring student projects, and organizing Grand Strand tech conferences.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 5: The College Trap -->
+      <div class="slide" data-slide="5">
+        <span class="pill-accent">// HARD TRUTHS</span>
+        <h2 class="slide-title">The "College Trap" Most Students Fall Into</h2>
+        <p class="subtitle">The greatest illusion is believing that graduating with a degree guarantees a career.</p>
+
+        <div class="grid-2">
+          <div class="split-box split-passive">
+            <div class="split-title"><span>❌</span> The Default Passive Path</div>
+            <p>1. Only complete assigned coursework & homework.</p>
+            <p>2. Keep a 3.8 GPA but possess 0 public code or lab projects.</p>
+            <p>3. Wait until Senior Spring semester to send 500 LinkedIn resumes.</p>
+            <p>4. Meet zero working engineers outside of professors.</p>
+            <div style="font-size:0.85rem; color:#fca5a5; margin-top:8px;">Result: Filtered out by ATS bots and competing with 10,000 identical grads.</div>
+          </div>
+
+          <div class="split-box split-active">
+            <div class="split-title"><span>✅</span> The High-Velocity Active Path</div>
+            <p>1. Build a $150 used mini-PC homelab running Linux & Proxmox.</p>
+            <p>2. Commit real code or vulnerability write-ups to GitHub weekly.</p>
+            <p>3. Show up at local meetups (CCC, BSides, Hackathons) as a freshman/sophomore.</p>
+            <p>4. Work on open-source, capture CTF flags, and connect with directors directly.</p>
+            <div style="font-size:0.85rem; color:#86efac; margin-top:8px;">Result: Hired through backchannel referral before even submitting a generic resume.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 6: The Superpower of Joining Networks Early -->
+      <div class="slide" data-slide="6">
+        <span class="pill-accent">// SOCIAL LEVERAGE</span>
+        <h2 class="slide-title">Why You Must Join Networks ASAP</h2>
+        <p class="subtitle">Senior tech leaders love mentoring hungry students. But they can't help people they don't know exist.</p>
+
+        <div class="grid-3">
+          <div class="card">
+            <h3><span>🤝</span> The Student Superpower</h3>
+            <p>When you say <em>"I'm a student fascinated by what you build, can I ask you 2 questions?"</em>, response rates are <strong>80%+</strong>. Once you graduate, you become another cold salesperson.</p>
+          </div>
+          <div class="card">
+            <h3><span>🚪</span> The Hidden Job Market</h3>
+            <p>Over <strong>75% of top tech and security roles</strong> are filled before ever hitting LinkedIn. They are filled by people who said: <em>"Hey, I know a kid from the local meetup who built something cool."</em></p>
+          </div>
+          <div class="card">
+            <h3><span>📈</span> Accelerated Signal</h3>
+            <p>When you talk to professionals weekly, you discover what technologies companies <em>actually</em> run (Linux, Docker, Terraform, Splunk) vs what textbooks taught from 2014.</p>
+          </div>
+        </div>
+
+        <div class="callout">
+          <strong>Rule of Thumb:</strong> Every tech event or Discord you join expands your opportunity surface area exponentially.
+        </div>
+      </div>
+
+      <!-- SLIDE 7: How to be Active Without "Networking Cringe" -->
+      <div class="slide" data-slide="7">
+        <span class="pill-accent">// TACTICAL ADVICE</span>
+        <h2 class="slide-title">How to Be Active (Without Being Annoying)</h2>
+        <p class="subtitle">Networking isn't about collecting business cards; it's about demonstrating curiosity and proof-of-work.</p>
+
+        <div class="grid-3">
+          <div class="card">
+            <h3><span>🛠️</span> 1. Show Your Work</h3>
+            <p>Don't just say you like cybersecurity. Publish a 2-page writeup on how you set up Wireshark, cracked your first CTF challenge, or deployed a Pi-hole on your dorm WiFi.</p>
+          </div>
+          <div class="card">
+            <h3><span>🙋</span> 2. Ask Surgical Questions</h3>
+            <p>Avoid: <em>"How do I get a job?"</em><br>Ask instead: <em>"I built a mini SIEM in Docker, but my syslog buffer is dropping packets. How do you handle high volume ingest in prod?"</em></p>
+          </div>
+          <div class="card">
+            <h3><span>🙌</span> 3. Volunteer at Events</h3>
+            <p>Volunteer to run the mic, manage badges, or set up cables at local conferences (Hack Myrtle, BSides). You get full free access and direct 1-on-1 time with keynote speakers.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 8: The 4-Pillar Playbook -->
+      <div class="slide" data-slide="8">
+        <span class="pill-accent">// THE BLUEPRINT</span>
+        <h2 class="slide-title">Your 4-Pillar Semester Playbook</h2>
+        <p class="subtitle">What you should commit to doing starting this week to guarantee job readiness.</p>
+
+        <div class="grid-4">
+          <div class="card">
+            <h3><span>1. Lab</span></h3>
+            <p>Set up a hypervisor or cloud free tier. Break Linux, configure firewalls, deploy containers.</p>
+            <div style="margin-top:10px;"><span class="code-pill">Hands-On Proof</span></div>
+          </div>
+          <div class="card">
+            <h3><span>2. Code</span></h3>
+            <p>Automate your lab tasks with Python, Bash, or Go. Push commits with clean commit messages.</p>
+            <div style="margin-top:10px;"><span class="code-pill">Public GitHub</span></div>
+          </div>
+          <div class="card">
+            <h3><span>3. Write</span></h3>
+            <p>Write short tutorials or notes on what you broke and how you fixed it. Documenting is mastering.</p>
+            <div style="margin-top:10px;"><span class="code-pill">Blog / README</span></div>
+          </div>
+          <div class="card">
+            <h3><span>4. Connect</span></h3>
+            <p>Attend Conway Computer Club, join regional Discords, engage with mentors, ask for feedback.</p>
+            <div style="margin-top:10px;"><span class="code-pill">Community First</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SLIDE 9: Your Immediate Action Plan & Call to Action -->
+      <div class="slide" data-slide="9">
+        <span class="pill-accent">// TAKE ACTION TODAY</span>
+        <h2 class="slide-title">What to Do Next</h2>
+        <p class="subtitle">Stop waiting for permission. The industry rewards those who build in public.</p>
+
+        <div class="grid-2">
+          <div class="card" style="border-color: rgba(56, 189, 248, 0.4);">
+            <h3><span>🚀</span> This Week's Checklist</h3>
+            <ul>
+              <li>Create or clean up your GitHub profile (add a clean README).</li>
+              <li>Join the <strong>Conway Computer Club</strong> Discord & community sessions.</li>
+              <li>Install Linux (in WSL2, VirtualBox, or on a spare machine).</li>
+              <li>Reach out to 1 local tech engineer on LinkedIn: ask about their career journey.</li>
+            </ul>
+          </div>
+          <div class="card" style="border-color: rgba(52, 211, 153, 0.4);">
+            <h3><span>📍</span> Get Involved with Us</h3>
+            <ul>
+              <li><strong>Conway Computer Club:</strong> Regular hands-on workshops, guest speakers & mentorship.</li>
+              <li><strong>Hack Myrtle:</strong> Regional hacking & defense events.</li>
+              <li><strong>Mentor Village:</strong> Direct 1-on-1 career pathing with industry practitioners.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="callout" style="background: rgba(52, 211, 153, 0.08); border-color: var(--emerald);">
+          <strong>Final Thought:</strong> Nobody asks for your GPA when you show them a working system you built or a vulnerability you discovered. Start building today.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <div class="slide-counter"><span id="curr-slide">1</span> / <span id="total-slides">9</span></div>
+      <div class="progress-bar-container">
+        <div class="progress-bar" id="progress"></div>
+      </div>
+      <div class="controls">
+        <button class="btn" id="btn-prev">← Prev</button>
+        <button class="btn" id="btn-next">Next →</button>
+        <button class="btn" id="btn-fs" title="Toggle Fullscreen">⛶ Fullscreen</button>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    let currentIdx = 0;
+
+    const currSlideEl = document.getElementById('curr-slide');
+    const totalSlidesEl = document.getElementById('total-slides');
+    const progressEl = document.getElementById('progress');
+    const btnPrev = document.getElementById('btn-prev');
+    const btnNext = document.getElementById('btn-next');
+    const btnFs = document.getElementById('btn-fs');
+
+    totalSlidesEl.textContent = totalSlides;
+
+    function showSlide(index) {
+      if (index < 0) index = 0;
+      if (index >= totalSlides) index = totalSlides - 1;
+      
+      slides.forEach((slide, i) => {
+        slide.classList.toggle('active', i === index);
+      });
+
+      currentIdx = index;
+      currSlideEl.textContent = currentIdx + 1;
+      const progressPercent = ((currentIdx + 1) / totalSlides) * 100;
+      progressEl.style.width = progressPercent + '%';
+    }
+
+    function nextSlide() {
+      if (currentIdx < totalSlides - 1) {
+        showSlide(currentIdx + 1);
+      }
+    }
+
+    function prevSlide() {
+      if (currentIdx > 0) {
+        showSlide(currentIdx - 1);
+      }
+    }
+
+    btnNext.addEventListener('click', nextSlide);
+    btnPrev.addEventListener('click', prevSlide);
+
+    btnFs.addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.error(`Error attempting to enable fullscreen: ${err.message}`);
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === 'Home') {
+        e.preventDefault();
+        showSlide(0);
+      } else if (e.key === 'End') {
+        e.preventDefault();
+        showSlide(totalSlides - 1);
+      } else if (e.key === 'f' || e.key === 'F') {
+        btnFs.click();
+      }
+    });
+
+    // Touch swipe support for mobile/tablets
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    document.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, false);
+
+    document.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      handleSwipe();
+    }, false);
+
+    function handleSwipe() {
+      if (touchEndX < touchStartX - 50) {
+        nextSlide();
+      }
+      if (touchEndX > touchStartX + 50) {
+        prevSlide();
+      }
+    }
+
+    // Init
+    showSlide(0);
+  </script>
+</body>
+</html>
